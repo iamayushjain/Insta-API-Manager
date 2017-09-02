@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "785071826295",
+    "firebase_url": "https://dp-downloader.firebaseio.com",
+    "project_id": "dp-downloader",
+    "storage_bucket": "dp-downloader.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:785071826295:android:cb60cd9d267877f9",
+        "android_client_info": {
+          "package_name": "com.instadownloader.instadpdownloader"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "785071826295-fp9puh11r6dnlh7ojdua4vuegspjhda6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAq5INZ1wGibFDLbkZ7X-s8IZ703exvtyM"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
