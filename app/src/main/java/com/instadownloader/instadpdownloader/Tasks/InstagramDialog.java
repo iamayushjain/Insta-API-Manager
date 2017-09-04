@@ -20,12 +20,13 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 /**
- * Created by ashok.kumar on 04/02/16.
+ * Created by ayush on 29/8/17.
  */
+
 public class InstagramDialog extends Dialog {
 
-    static final float[] DIMENSIONS_LANDSCAPE = { 460, 260 };
-    static final float[] DIMENSIONS_PORTRAIT = { 280, 420 };
+    static final float[] DIMENSIONS_LANDSCAPE = {460, 260};
+    static final float[] DIMENSIONS_PORTRAIT = {280, 420};
     static final FrameLayout.LayoutParams FILL = new FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.FILL_PARENT,
             ViewGroup.LayoutParams.FILL_PARENT);
@@ -144,6 +145,7 @@ public class InstagramDialog extends Dialog {
 
     public interface OAuthDialogListener {
         public abstract void onComplete(String accessToken);
+
         public abstract void onError(String error);
     }
 

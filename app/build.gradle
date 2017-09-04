@@ -24,7 +24,10 @@ android {
             shrinkResources true
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-
+            buildConfigField "boolean", "isDebug", "false"
+        }
+        debug {
+            buildConfigField "boolean", "isDebug", "true"
         }
     }
 }

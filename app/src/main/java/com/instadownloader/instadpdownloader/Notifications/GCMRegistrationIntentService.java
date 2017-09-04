@@ -2,7 +2,6 @@ package com.instadownloader.instadpdownloader.Notifications;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
@@ -51,8 +50,8 @@ public class GCMRegistrationIntentService extends IntentService {
             //Displaying the token in the log so that we can copy it to send push notification
             //You can also extend the app by storing the token in to your server
             Log.w("GCMRegIntentService", "token:" + token);
-            SharedPreferencesWrapper sharedPreferencesWrapper=new SharedPreferencesWrapper(getApplicationContext());
-            sharedPreferencesWrapper.putData(PreferencesConstants.USER_INFO,PreferencesConstants.GCM_TOKEN,token);
+            SharedPreferencesWrapper sharedPreferencesWrapper = new SharedPreferencesWrapper(getApplicationContext());
+            sharedPreferencesWrapper.putData(PreferencesConstants.USER_INFO, PreferencesConstants.GCM_TOKEN, token);
             //on registration complete creating intent with success
             registrationComplete = new Intent(REGISTRATION_SUCCESS);
 

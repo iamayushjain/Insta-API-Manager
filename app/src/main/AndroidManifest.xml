@@ -5,6 +5,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <permission
         android:name="com.ayush.copyclipermain.permission.C2D_MESSAGE"
@@ -26,6 +28,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".Activity.ImageDisplayActivity" />
+        <activity android:name=".Activity.ViewPhotosActivity" />
 
         <receiver
             android:name="com.google.android.gms.gcm.GcmReceiver"

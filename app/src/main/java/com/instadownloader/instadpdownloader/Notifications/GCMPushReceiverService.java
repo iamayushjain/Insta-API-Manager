@@ -27,7 +27,7 @@ public class GCMPushReceiverService extends GcmListenerService {
     public void onMessageReceived(String from, Bundle data) {
 
         //Getting the message from the bundle
-        Log.d("Token","Message received");
+        Log.d("Token", "Message received");
         String message = data.getString("message");
 //        String sender = data.getString("sender");
 //        String reciver = data.getString("receiver");
@@ -51,7 +51,7 @@ public class GCMPushReceiverService extends GcmListenerService {
                 .setAutoCancel(true)
                 .setContentIntent(pendingIntent);
 
-        NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(0, noBuilder.build()); //0 = ID of notification
     }
 }

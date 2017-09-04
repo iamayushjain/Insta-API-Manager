@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -13,23 +14,37 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
+import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.InterstitialAd;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.instadownloader.instadpdownloader.Notifications.GCMRegistrationIntentService;
 import com.instadownloader.instadpdownloader.R;
 import com.instadownloader.instadpdownloader.Tasks.LoadJsonData;
 import com.instadownloader.instadpdownloader.Utils.Constants;
+import com.instadownloader.instadpdownloader.Utils.FirebaseConstants;
+import com.instadownloader.instadpdownloader.Utils.LogWrapper;
+import com.instadownloader.instadpdownloader.Utils.PreferencesConstants;
+import com.instadownloader.instadpdownloader.Utils.SharedPreferencesWrapper;
+import com.instadownloader.instadpdownloader.Utils.Utils;
 
 public class MainActivity extends Activity {
 
     private EditText userNameEditText;
     private Button download, viewProfile;
-    private InterstitialAd mInterstitialAd;
+    public static InterstitialAd mInterstitialAd;
     private TextView textViewToolbar;
     private AdView mAdView;
+    private int currentAdsCount, adsCountLimit;
+    private FirebaseDatabase firebaseDatabase;
+    private DatabaseReference databaseReferenceGsim;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,36 +85,33 @@ public class MainActivity extends Activity {
                 loadProfile();
             }
         });
-//        mInterstitialAd = new InterstitialAd(MainActivity.this);
-//        mInterstitialAd.setAdUnitId(getResources().getString(R.string.ad));
-//        AdRequest adRequest = new AdRequest.Builder()
-//                .addTestDevice(getResources().getString(R.string.testid))
-//                .build();
-//        mInterstitialAd.loadAd(adRequest);
-//
-//        mInterstitialAd.setAdListener(new AdListener() {
-//            public void onAdLoaded() {
-//                while (mInterstitialAd.isLoading()) {
-//                }
-//                if (mInterstitialAd.isLoaded()) {
-//                    mInterstitialAd.show();
-//                }
-//
-//            }
-//        });
+
+        firebaseDatabase = FirebaseDatabase.getInstance();
+        databaseReferenceGsim = firebaseDatabase.getReference(FirebaseConstants.GENERAL);
 
     }
 
 
     private void loadProfile() {
-        LoadJsonData loadJsonData = new LoadJsonData(MainActivity.this, userNameEditText.getText().toString(), Constants.ACTION_VIEW_PHOTOS);
-        loadJsonData.execute();
-
+        if (Utils.isNetworkAvailable(getApplicationContext())) {
+            LoadJsonData loadJsonData = new LoadJsonData(MainActivity.this, userNameEditText.getText().toString(), Constants.ACTION_VIEW_PHOTOS);
+            loadJsonData.execute();
+        } else {
+            noInternet();
+        }
     }
 
     private void downloadDp() {
-        LoadJsonData loadJsonData = new LoadJsonData(MainActivity.this, userNameEditText.getText().toString(), Constants.ACTION_DOWNLOAD_DP);
-        loadJsonData.execute();
+        if (Utils.isNetworkAvailable(getApplicationContext())) {
+            LoadJsonData loadJsonData = new LoadJsonData(MainActivity.this, userNameEditText.getText().toString(), Constants.ACTION_DOWNLOAD_DP);
+            loadJsonData.execute();
+        } else {
+            noInternet();
+        }
+    }
+
+    private void noInternet() {
+        Snackbar.make(findViewById(R.id.rootRelativeLayout), getString(R.string.no_internet_message), Snackbar.LENGTH_LONG).show();
     }
 
     @Override
@@ -108,13 +120,16 @@ public class MainActivity extends Activity {
         Intent intent = new Intent(this, GCMRegistrationIntentService.class);
         startService(intent);
         final ClipboardManager clipboard = (ClipboardManager) this.getSystemService(Context.CLIPBOARD_SERVICE);
-        clipboard.addPrimaryClipChangedListener( new ClipboardManager.OnPrimaryClipChangedListener() {
+        clipboard.addPrimaryClipChangedListener(new ClipboardManager.OnPrimaryClipChangedListener() {
             public void onPrimaryClipChanged() {
                 String a = clipboard.toString();
 //                if(a.startsWith(Constants.INSTA_PROFILE_START))
 //                Toast.makeText(getBaseContext(),"Copy:\n"+a, Toast.LENGTH_LONG).show();
             }
         });
+        if (!Utils.isNetworkAvailable(getApplicationContext())) {
+            noInternet();
+        }
     }
 
     private void loadBannerAds() {
@@ -125,4 +140,43 @@ public class MainActivity extends Activity {
     }
 
 
+    private void loadInterstitialAds() {
+
+        final SharedPreferencesWrapper sharedPreferencesWrapper = new SharedPreferencesWrapper(getApplicationContext());
+        String adSavedOccurrence = sharedPreferencesWrapper.getString(PreferencesConstants.SHARED_PREF_ADS_COUNT, PreferencesConstants.SHARED_PREF_ADS_COUNT_LAUNCHER_INTERSTITIAL, "0");
+        currentAdsCount = Integer.parseInt(adSavedOccurrence);
+        currentAdsCount++;
+
+
+        databaseReferenceGsim.child(FirebaseConstants.ADS_COUNT_MAIN).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+
+                adsCountLimit = Integer.parseInt(snapshot.getValue().toString());
+
+                if (currentAdsCount >= adsCountLimit) {
+                    currentAdsCount = 0;
+                    mInterstitialAd = new InterstitialAd(MainActivity.this);
+                    mInterstitialAd.setAdUnitId(getResources().getString(R.string.interstitial_ad_unit_1));
+                    AdRequest adRequest = new AdRequest.Builder()
+                            .addTestDevice(getResources().getString(R.string.test_id_1))
+                            .build();
+                    mInterstitialAd.loadAd(adRequest);
+
+                }
+
+
+                sharedPreferencesWrapper.putSingleData(PreferencesConstants.SHARED_PREF_ADS_COUNT, PreferencesConstants.SHARED_PREF_ADS_COUNT_LAUNCHER_INTERSTITIAL, currentAdsCount + "");
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                LogWrapper.out(getApplicationContext(), databaseError.getMessage());
+            }
+        });
+    }
 }
+
+
+
+

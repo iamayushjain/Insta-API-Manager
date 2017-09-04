@@ -82,7 +82,7 @@ public class InstagramApp {
                 + clientId
                 + "&redirect_uri="
                 + mCallbackUrl
-                + "&response_type=code&display=touch&scope=likes+comments+relationships";
+                + "&response_type=code&display=touch&scope=public_content";
 
         InstagramDialog.OAuthDialogListener listener = new InstagramDialog.OAuthDialogListener() {
             @Override
@@ -155,7 +155,7 @@ public class InstagramApp {
 
     public void fetchUserName(final Handler handler) {
         mProgress = new ProgressDialog(mCtx);
-        mProgress.setMessage("Loading ...");
+        mProgress.setMessage("Fetching Name ...");
         mProgress.show();
 
         new Thread() {

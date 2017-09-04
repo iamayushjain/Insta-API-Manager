@@ -6,4 +6,6 @@ package com.instadownloader.instadpdownloader.Utils;
 
 public class FirebaseConstants {
 
+    public static final String GENERAL="BASICS";
+    public static final String ADS_COUNT_MAIN="2";
 }

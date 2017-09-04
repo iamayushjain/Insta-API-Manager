@@ -18,7 +18,8 @@ public class PreferencesConstants {
     public static final String SHARED_PREF_API_LOGIN_NAME = "name";
     public static final String SHARED_PREF_API_LOGIN_ACCESS_TOKEN = "access_token";
 
-
+    public static final String SHARED_PREF_ADS_COUNT = "adsTable";
+    public static final String SHARED_PREF_ADS_COUNT_LAUNCHER_INTERSTITIAL = "inter1";
 
 
 }
