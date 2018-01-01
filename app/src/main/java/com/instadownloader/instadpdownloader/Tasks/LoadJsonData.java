@@ -58,12 +58,14 @@ public class LoadJsonData extends AsyncTask<Void, Void, ObjectClass> {
 
     protected void onPreExecute() {
         super.onPreExecute();
-        mProgressDialog = new ProgressDialog(context);
-        mProgressDialog.setTitle("Loading");
-        mProgressDialog.setMessage("Rukk bhai");
-        mProgressDialog.setIndeterminate(false);
-        mProgressDialog.setCancelable(false);
-        mProgressDialog.show();
+        if (context != null) {
+            mProgressDialog = new ProgressDialog(context);
+            mProgressDialog.setTitle("Loading");
+            mProgressDialog.setMessage("Please Wait");
+            mProgressDialog.setIndeterminate(false);
+            mProgressDialog.setCancelable(false);
+            mProgressDialog.show();
+        }
         isSuccessful = false;
     }
 
@@ -71,8 +73,6 @@ public class LoadJsonData extends AsyncTask<Void, Void, ObjectClass> {
     protected ObjectClass doInBackground(Void... params) {
 
         try {
-//            return new ObjectClass(
-//                    "https://instagram.fdel1-1.fna.fbcdn.net/t51.2885-19/s150x150/15625204_1270691129663691_3980436550172278784_a.jpg", false);
             String urlCourse = "https://instagram.com/" + userName + "/?__a=1";
             Connection.Response response = Jsoup.connect(urlCourse)
                     .method(Connection.Method.GET).timeout(0).ignoreContentType(true)
@@ -82,7 +82,7 @@ public class LoadJsonData extends AsyncTask<Void, Void, ObjectClass> {
             JSONObject sys = reader.getJSONObject("user");
             String imageUrl = sys.getString("profile_pic_url");
             boolean isPrivate = sys.getBoolean("is_private");
-            LogWrapper.d(context, "Tag", imageUrl);
+            LogWrapper.d("Tag", imageUrl);
             if (action == Constants.ACTION_VIEW_PHOTOS) {
                 ObjectClass objectClass = getImageUrlsList(sys.getString("media"));
                 isSuccessful = true;
@@ -92,7 +92,7 @@ public class LoadJsonData extends AsyncTask<Void, Void, ObjectClass> {
             isSuccessful = true;
             return new ObjectClass(imageUrl, isPrivate);
         } catch (Exception e) {
-            LogWrapper.printStackTrace(context, e);
+            LogWrapper.printStackTrace(e);
             isSuccessful = false;
         }
         return null;
@@ -106,7 +106,8 @@ public class LoadJsonData extends AsyncTask<Void, Void, ObjectClass> {
 
 
         try {
-            mProgressDialog.dismiss();
+            if (mProgressDialog != null)
+                mProgressDialog.dismiss();
             if (objectClass != null) {
                 Intent intent;
                 switch (action) {
@@ -127,20 +128,20 @@ public class LoadJsonData extends AsyncTask<Void, Void, ObjectClass> {
                     case Constants.ACTION_VIEW_PHOTOS:
                         boolean isPrivate = (Boolean) objectClass.getObject2();
                         if (isPrivate) {
-                            final InstagramApp instagramApp = new InstagramApp(context, BuildConfig.CLIENT_ID, BuildConfig.CLIENT_SECRET, BuildConfig.CALLBACK_URL);
-                            instagramApp.setListener(new InstagramApp.OAuthAuthenticationListener() {
-
-                                @Override
-                                public void onSuccess() {
-                                    instagramApp.fetchUserName(handler);
-                                }
-
-                                @Override
-                                public void onFail(String error) {
-
-                                }
-                            });
-                            instagramApp.authorize();
+//                            final InstagramApp instagramApp = new InstagramApp(context, BuildConfig.CLIENT_ID, BuildConfig.CLIENT_SECRET, BuildConfig.CALLBACK_URL);
+//                            instagramApp.setListener(new InstagramApp.OAuthAuthenticationListener() {
+//
+//                                @Override
+//                                public void onSuccess() {
+//                                    instagramApp.fetchUserName(handler);
+//                                }
+//
+//                                @Override
+//                                public void onFail(String error) {
+//
+//                                }
+//                            });
+//                            instagramApp.authorize();
                         } else {
                             intent = new Intent(context, ViewPhotosActivity.class);
                             ArrayList<String> imageUrls = (ArrayList<String>) objectClass.getObject3();
@@ -151,6 +152,8 @@ public class LoadJsonData extends AsyncTask<Void, Void, ObjectClass> {
                             context.startActivity(intent);
                         }
                         break;
+                    case Constants.ACTION_SERVICE_VIEW_PHOTOS:
+
                 }
             }
         } catch (Exception e) {

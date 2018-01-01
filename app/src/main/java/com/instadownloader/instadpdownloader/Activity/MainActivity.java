@@ -1,21 +1,27 @@
 package com.instadownloader.instadpdownloader.Activity;
 
 import android.app.Activity;
+import android.content.ClipData;
+import android.content.ClipDescription;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.design.widget.Snackbar;
+import android.support.v7.widget.SwitchCompat;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.InterstitialAd;
@@ -27,6 +33,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.instadownloader.instadpdownloader.Notifications.GCMRegistrationIntentService;
 import com.instadownloader.instadpdownloader.R;
 import com.instadownloader.instadpdownloader.Tasks.LoadJsonData;
+import com.instadownloader.instadpdownloader.Utils.AppUtils;
 import com.instadownloader.instadpdownloader.Utils.Constants;
 import com.instadownloader.instadpdownloader.Utils.FirebaseConstants;
 import com.instadownloader.instadpdownloader.Utils.LogWrapper;
@@ -44,7 +51,8 @@ public class MainActivity extends Activity {
     private int currentAdsCount, adsCountLimit;
     private FirebaseDatabase firebaseDatabase;
     private DatabaseReference databaseReferenceGsim;
-
+    private SwitchCompat switchLoadProfileFromAnyWhere;
+    public static int ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE = 526;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +61,8 @@ public class MainActivity extends Activity {
         init();
     }
 
+
+    //initialize all variable here
     private void init() {
         userNameEditText = (EditText) findViewById(R.id.inputUsername);
 
@@ -73,6 +83,7 @@ public class MainActivity extends Activity {
         textViewToolbar.setTypeface(Typeface
                 .createFromAsset(getAssets(), Constants.BILLABONG_TTF));
         loadBannerAds();
+        loadInterstitialAds();
         download.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -85,16 +96,110 @@ public class MainActivity extends Activity {
                 loadProfile();
             }
         });
-
+        switchLoadProfileFromAnyWhere = (SwitchCompat) findViewById(R.id.switchButton);
+        getStoredSwitchStatus();
+        switchLoadProfileFromAnyWhere.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                LogWrapper.d("Service", "Button changed");
+                setValueSwitch(isChecked);
+            }
+        });
         firebaseDatabase = FirebaseDatabase.getInstance();
         databaseReferenceGsim = firebaseDatabase.getReference(FirebaseConstants.GENERAL);
 
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        startGCMService();
+
+        if (!Utils.isNetworkAvailable(getApplicationContext())) {
+            noInternet();
+        }
+        getClipBoardData();
+    }
+
+    private void getClipBoardData() {
+        ClipboardManager clipboard = (ClipboardManager) this.getSystemService(Context.CLIPBOARD_SERVICE);
+        if ((clipboard.hasPrimaryClip()) &&
+                ((clipboard.getPrimaryClipDescription().hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN)))) {
+            //since the clipboard contains plain text.
+            ClipData.Item item = clipboard.getPrimaryClip().getItemAt(0);
+            String pasteData = item.getText().toString();
+            if (AppUtils.isInstaData(pasteData)) {
+                userNameEditText.setText(pasteData);
+            }
+        }
+
+    }
+
+    private void startGCMService() {
+        Intent intent = new Intent(this, GCMRegistrationIntentService.class);
+        startService(intent);
+    }
+
+    //to change button only once is service is completely started or ended
+    private void getStoredSwitchStatus() {
+        if (SharedPreferencesWrapper.getBoolean(getApplicationContext(),
+                PreferencesConstants.SHARED_PREF_UTILS,
+                PreferencesConstants.SHARED_PREF_ANYWHERE_IMAGE_FIND, true)) {
+            initiateService();
+        } else {
+            destroyService();
+        }
+    }
+
+    private void setValueSwitch(boolean isChecked) {
+        if (isChecked) {
+            initiateService();
+        } else {
+            destroyService();
+        }
+    }
+
+    private void startServiceInsta() {
+        LogWrapper.d("Service", "Start Service Here");
+        startService(new Intent(MainActivity.this, Service.class).addCategory(Service.TAG));
+        SharedPreferencesWrapper.putData(getApplicationContext(),
+                PreferencesConstants.SHARED_PREF_UTILS,
+                PreferencesConstants.SHARED_PREF_ANYWHERE_IMAGE_FIND, true);
+        switchLoadProfileFromAnyWhere.setChecked(true);
+    }
+
+    private void initiateService() {
+
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (!Settings.canDrawOverlays(getApplicationContext())) {
+                Intent intent2 = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+                intent2.setData(Uri.parse("package:" + getPackageName()));
+                startActivityForResult(intent2, ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE);
+            } else {
+                startServiceInsta();
+            }
+        } else {
+            startServiceInsta();
+        }
+    }
+
+    private void destroyService() {
+        LogWrapper.d(getApplicationContext(), "Service", "Stop Service Here");
+        SharedPreferencesWrapper.putData(getApplicationContext(),
+                PreferencesConstants.SHARED_PREF_UTILS,
+                PreferencesConstants.SHARED_PREF_ANYWHERE_IMAGE_FIND, false);
+        switchLoadProfileFromAnyWhere.setChecked(false);
+        stopService(new Intent(MainActivity.this, Service.class).addCategory(Service.TAG));
+    }
 
     private void loadProfile() {
         if (Utils.isNetworkAvailable(getApplicationContext())) {
-            LoadJsonData loadJsonData = new LoadJsonData(MainActivity.this, userNameEditText.getText().toString(), Constants.ACTION_VIEW_PHOTOS);
+            String userName = AppUtils.filterUserName(userNameEditText.getText().toString());
+            if (userName == null) {
+                invalidUserName();
+                return;
+            }
+            LoadJsonData loadJsonData = new LoadJsonData(MainActivity.this,
+                    userName, Constants.ACTION_VIEW_PHOTOS);
             loadJsonData.execute();
         } else {
             noInternet();
@@ -103,7 +208,13 @@ public class MainActivity extends Activity {
 
     private void downloadDp() {
         if (Utils.isNetworkAvailable(getApplicationContext())) {
-            LoadJsonData loadJsonData = new LoadJsonData(MainActivity.this, userNameEditText.getText().toString(), Constants.ACTION_DOWNLOAD_DP);
+            String userName = AppUtils.filterUserName(userNameEditText.getText().toString());
+            if (userName == null) {
+                invalidUserName();
+                return;
+            }
+            LoadJsonData loadJsonData = new LoadJsonData(MainActivity.this,
+                    userName, Constants.ACTION_DOWNLOAD_DP);
             loadJsonData.execute();
         } else {
             noInternet();
@@ -111,26 +222,15 @@ public class MainActivity extends Activity {
     }
 
     private void noInternet() {
-        Snackbar.make(findViewById(R.id.rootRelativeLayout), getString(R.string.no_internet_message), Snackbar.LENGTH_LONG).show();
+        Snackbar.make(findViewById(R.id.rootRelativeLayout), getString(R.string.no_internet_message),
+                Snackbar.LENGTH_LONG).show();
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        Intent intent = new Intent(this, GCMRegistrationIntentService.class);
-        startService(intent);
-        final ClipboardManager clipboard = (ClipboardManager) this.getSystemService(Context.CLIPBOARD_SERVICE);
-        clipboard.addPrimaryClipChangedListener(new ClipboardManager.OnPrimaryClipChangedListener() {
-            public void onPrimaryClipChanged() {
-                String a = clipboard.toString();
-//                if(a.startsWith(Constants.INSTA_PROFILE_START))
-//                Toast.makeText(getBaseContext(),"Copy:\n"+a, Toast.LENGTH_LONG).show();
-            }
-        });
-        if (!Utils.isNetworkAvailable(getApplicationContext())) {
-            noInternet();
-        }
+    private void invalidUserName() {
+        Snackbar.make(findViewById(R.id.rootRelativeLayout), getString(R.string.invalid_user_name),
+                Snackbar.LENGTH_LONG).show();
     }
+
 
     private void loadBannerAds() {
         AdRequest adRequest1 = new AdRequest.Builder()
@@ -143,7 +243,9 @@ public class MainActivity extends Activity {
     private void loadInterstitialAds() {
 
         final SharedPreferencesWrapper sharedPreferencesWrapper = new SharedPreferencesWrapper(getApplicationContext());
-        String adSavedOccurrence = sharedPreferencesWrapper.getString(PreferencesConstants.SHARED_PREF_ADS_COUNT, PreferencesConstants.SHARED_PREF_ADS_COUNT_LAUNCHER_INTERSTITIAL, "0");
+        String adSavedOccurrence = sharedPreferencesWrapper.getString(
+                PreferencesConstants.SHARED_PREF_ADS_COUNT,
+                PreferencesConstants.SHARED_PREF_ADS_COUNT_LAUNCHER_INTERSTITIAL, "0");
         currentAdsCount = Integer.parseInt(adSavedOccurrence);
         currentAdsCount++;
 
@@ -166,7 +268,9 @@ public class MainActivity extends Activity {
                 }
 
 
-                sharedPreferencesWrapper.putSingleData(PreferencesConstants.SHARED_PREF_ADS_COUNT, PreferencesConstants.SHARED_PREF_ADS_COUNT_LAUNCHER_INTERSTITIAL, currentAdsCount + "");
+                sharedPreferencesWrapper.putSingleData(PreferencesConstants.SHARED_PREF_ADS_COUNT,
+                        PreferencesConstants.SHARED_PREF_ADS_COUNT_LAUNCHER_INTERSTITIAL,
+                        currentAdsCount + "");
             }
 
             @Override
@@ -175,8 +279,17 @@ public class MainActivity extends Activity {
             }
         });
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE) {
+            if (Build.VERSION.SDK_INT >= 23) {
+                if (Settings.canDrawOverlays(getApplicationContext())) {
+                    startServiceInsta();
+                } else {
+                    switchLoadProfileFromAnyWhere.setChecked(false);
+                }
+            }
+        }
+    }
 }
-
-
-
-

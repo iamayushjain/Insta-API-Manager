@@ -1,6 +1,7 @@
 package com.instadownloader.instadpdownloader.Utils;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -116,5 +117,16 @@ public class Utils {
 
         return str;
     }
-
+    public static boolean isServiceRunning(Context context, Class<?> serviceClass){
+        if(context == null){
+            return false;
+        }
+        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

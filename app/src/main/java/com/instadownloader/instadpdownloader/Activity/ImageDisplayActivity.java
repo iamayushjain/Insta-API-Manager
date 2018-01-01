@@ -2,6 +2,7 @@ package com.instadownloader.instadpdownloader.Activity;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -21,6 +22,8 @@ import com.instadownloader.instadpdownloader.R;
 import com.instadownloader.instadpdownloader.Tasks.DownloadingPhoto;
 import com.instadownloader.instadpdownloader.Utils.Constants;
 import com.instadownloader.instadpdownloader.Utils.LogWrapper;
+import com.instadownloader.instadpdownloader.Utils.PreferencesConstants;
+import com.instadownloader.instadpdownloader.Utils.SharedPreferencesWrapper;
 import com.instadownloader.instadpdownloader.Utils.ZoomImageView;
 import com.squareup.picasso.Picasso;
 
@@ -89,6 +92,7 @@ public class ImageDisplayActivity extends Activity {
         downloadButton.setEnabled(true);
     }
 
+
     private void getBundle() {
         Bundle bundle = getIntent().getExtras();
         String bundleString = bundle.getString(Constants.BUNDLE_IMAGE_URL);
@@ -139,4 +143,62 @@ public class ImageDisplayActivity extends Activity {
             downloadPhoto();
         }
     }
+
+//    private void onToggleButtonAction(){
+//
+//        if(SharedPreferencesWrapper.getString( PreferencesConstants.GCM_TOKEN, )){
+//            stopService(new Intent(ImageDisplayActivity.this, ClipBoardService.class).addCategory(ClipBoardService.TAG));
+//            Preferences.put(getApplicationContext(), Preferences.KEY_IS_MEANING_SEARCH_ANYWHERE_ENABLE, false);
+//            mHelloMeaningSwitch.setImageResource(R.drawable.toggle_off);
+//            mHelloMeaningSwitch.setTag("off");
+//            searchStatus.setText(getString(R.string.sticky_enable));
+//            hellomeaning_toggle_text.setText(getString(R.string.sticky_enable));
+//            status.setText(getString(R.string.findmeaning_disable_msg));
+//            Toast.makeText(getApplicationContext(), getString(R.string.findmeaning_disable), Toast.LENGTH_SHORT).show();
+//    }
+//				else{
+//
+//        if(Build.VERSION.SDK_INT >= 23) {
+//            if (!Settings.canDrawOverlays(getApplicationContext())) {
+//                Intent intent2 = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+//                intent2.setData(Uri.parse("package:"+getPackageName()));
+//                startActivityForResult(intent2, ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE);
+//            }else{
+//                startService(new Intent(StickyActivity.this, ClipBoardService.class).addCategory(ClipBoardService.TAG));
+//                Preferences.put(getApplicationContext(), Preferences.KEY_IS_MEANING_SEARCH_ANYWHERE_ENABLE, true);
+//                searchStatus.setText(getString(R.string.sticky_disable));
+//                hellomeaning_toggle_text.setText(getString(R.string.sticky_disable));
+//                mHelloMeaningSwitch.setImageResource(R.drawable.toggle_on);
+//                mHelloMeaningSwitch.setTag("on");
+//                status.setText(getString(R.string.findmeaning_enable_msg));
+//                Toast.makeText(getApplicationContext(), getString(R.string.findmeaning_enable), Toast.LENGTH_SHORT).show();
+//            }
+//        }else{
+//            startService(new Intent(StickyActivity.this, ClipBoardService.class).addCategory(ClipBoardService.TAG));
+//            Preferences.put(getApplicationContext(), Preferences.KEY_IS_MEANING_SEARCH_ANYWHERE_ENABLE, true);
+//            mHelloMeaningSwitch.setImageResource(R.drawable.toggle_on);
+//            mHelloMeaningSwitch.setTag("on");
+//            searchStatus.setText(getString(R.string.sticky_disable));
+//            hellomeaning_toggle_text.setText(getString(R.string.sticky_disable));
+//            status.setText(getString(R.string.findmeaning_enable_msg));
+//            Toast.makeText(getApplicationContext(), getString(R.string.findmeaning_enable), Toast.LENGTH_SHORT).show();
+//        }
+//    }
+//}
+//});
+//        }
+//@Override
+//protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        if (requestCode == ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE) {
+//        if (Settings.canDrawOverlays(this)) {
+//        startService(new Intent(StickyActivity.this, ClipBoardService.class).addCategory(ClipBoardService.TAG));
+//        Preferences.put(getApplicationContext(), Preferences.KEY_IS_MEANING_SEARCH_ANYWHERE_ENABLE, true);
+//        mHelloMeaningSwitch.setImageResource(R.drawable.toggle_on);
+//        mHelloMeaningSwitch.setTag("on");
+//        searchStatus.setText(getString(R.string.sticky_disable));
+//        hellomeaning_toggle_text.setText(getString(R.string.sticky_disable));
+//        status.setText(getString(R.string.findmeaning_enable_msg));
+//        Toast.makeText(getApplicationContext(), getString(R.string.findmeaning_enable), Toast.LENGTH_SHORT).show();
+//        }
+//        }
 }

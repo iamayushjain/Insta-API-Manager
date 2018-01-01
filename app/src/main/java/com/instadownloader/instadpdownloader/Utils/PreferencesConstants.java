@@ -21,5 +21,7 @@ public class PreferencesConstants {
     public static final String SHARED_PREF_ADS_COUNT = "adsTable";
     public static final String SHARED_PREF_ADS_COUNT_LAUNCHER_INTERSTITIAL = "inter1";
 
+    public static final String SHARED_PREF_UTILS = "utils";
+    public static final String SHARED_PREF_ANYWHERE_IMAGE_FIND = "keyImageFind";
 
 }

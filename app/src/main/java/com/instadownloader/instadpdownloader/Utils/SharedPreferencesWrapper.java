@@ -8,23 +8,38 @@ import android.content.SharedPreferences;
  */
 
 public class SharedPreferencesWrapper {
-    private Context context;
+    private static Context context;
     private SharedPreferences.Editor editor;
     public SharedPreferencesWrapper(Context context) {
         this.context = context;
     }
 
-    public void putData(String table, String attribute, String data) {
+    public static void putData(String table, String attribute, Object data) {
         SharedPreferences sharedPreferencesTable = context.getSharedPreferences(table, Context.MODE_PRIVATE);
         SharedPreferences.Editor ed1 = sharedPreferencesTable.edit();
-        ed1.putString(attribute, data);
+        if(data instanceof String)
+            ed1.putString(attribute, data.toString());
+        else if(data instanceof Boolean)
+            ed1.putBoolean(attribute, (Boolean)data);
+        ed1.commit();
+    }
+    public static void putData(Context context,String table, String attribute, Object data) {
+        SharedPreferences sharedPreferencesTable = context.getSharedPreferences(table, Context.MODE_PRIVATE);
+        SharedPreferences.Editor ed1 = sharedPreferencesTable.edit();
+        if(data instanceof String)
+            ed1.putString(attribute, data.toString());
+        else if(data instanceof Boolean)
+            ed1.putBoolean(attribute, (Boolean)data);
         ed1.commit();
     }
 
-    public void putSingleData(String table, String attribute, String data) {
+    public static void putSingleData(String table, String attribute,Object data) {
         SharedPreferences sharedPreferencesTable = context.getSharedPreferences(table, Context.MODE_PRIVATE);
         SharedPreferences.Editor ed1 = sharedPreferencesTable.edit();
-        ed1.putString(attribute, data);
+        if(data instanceof String)
+            ed1.putString(attribute, data.toString());
+        else if(data instanceof Boolean)
+            ed1.putBoolean(attribute, (Boolean)data);
         ed1.commit();
     }
 
@@ -43,8 +58,17 @@ public class SharedPreferencesWrapper {
         }
 
     }
-    public String getString(String table, String attribute, String defaultValue) {
+    public static String getString(String table, String attribute, String defaultValue) {
         SharedPreferences sharedPreferencesTable = context.getSharedPreferences(table, 0);
         return (sharedPreferencesTable.getString(attribute,defaultValue));
+    }
+
+    public static boolean getBoolean(String table, String attribute, boolean defaultValue) {
+        SharedPreferences sharedPreferencesTable = context.getSharedPreferences(table, 0);
+        return (sharedPreferencesTable.getBoolean(attribute,defaultValue));
+    }
+    public static boolean getBoolean(Context context,String table, String attribute, boolean defaultValue) {
+        SharedPreferences sharedPreferencesTable = context.getSharedPreferences(table, 0);
+        return (sharedPreferencesTable.getBoolean(attribute,defaultValue));
     }
 }
